@@ -3,13 +3,7 @@
 ;
 ;
 ;"InnCrowd" is an applet designed to automate scheduling for installations.  With this utility you could potentially schedule twenty or thirty appointments within ten minutes. 
-;
-;**This is poor documentation, I will spend more time on it. You'll just have to wing it for now.**
-;
-;1.  InnCrowd is compatible with modern IE browsers and you must be logged into SalesForce
-;2.  You can exit or pause at any time using Esc or Pause|Break, it will loop indefinitely until you quit. 
-;3.  There is highlighted text in the text field that shows you what input goes where, the spaces are necessary and you use A/P for AM/PM.
-;4.  InnCrowd takes up to five arguments divided by spaces: InnCode Time Date HPRep DHTech
+;1.  InnCrowd takes up to five arguments divided by spaces: InnCode Time Date HPRep DHTech
 ;
 ;	a. InnCode, Time and Date are always required, if they are not present InnCrowd will crash and exit. 
 ;	   i.	InnCode, Time and Date must be in that order, HPRep and DHTech can swap at any time.
@@ -19,15 +13,11 @@
 ;	   i. 	HPRep is required the first time you run but any entry will be accepted.
 ;	   ii.	Afterwards it will store the given value until the application is terminated. 
 ;	   iii. HPRep can also be overwritten at anytime by appending it as the 4th or 5th argument.
-;	c. DHTech
+;	c. Tech
 ;	   i. 	DHTech is never required, if you don't enter one InnCrowd will select the user that currently covers that shift.
 ;	   ii.  If a valid tech is not entered InnCrowd will silently select the default tech for that shift.
-;	   iii. Gerard and Dan are not currently on the schedule, they both will have to be entered manually.
-;
-;They are in a share on my PC:
 ;
 ;"InnCrowd-SafeMode.exe" can be run without creating any cases/events.
-;"InnCrowd.exe" will create and save cases/events.  Worst case is that you have to edit or delete cases/events.
 ;
 ;
 
