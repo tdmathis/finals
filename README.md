@@ -1,2 +1,2 @@
 # finals
-Home for clean, finalized production code.
+Home for clean, finalized production scripts.
