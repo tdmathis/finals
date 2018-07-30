@@ -1,0 +1,90 @@
+// This script automatically closes incidents that are in progress client
+// and haven't been updated in the specified number of days.
+
+autoClosePendingCustomerActionIncidents();
+
+function autoClosePendingCustomerActionIncidents(){
+	
+	// relative durations
+	var fiveDays = '99e98ab437ef1700de82c97a43990e41';
+	var tenDays = '4e98963037235700de82c97a43990ec2';
+	
+	var gr=new GlideRecord('u_mssp_incident');
+	
+	// Query High priority, In Progress -  Client tickets and close
+	gr.addQuery('state','10'); // In Progress - Client
+	gr.addQuery('priority','2'); // 2 - high
+	
+	// we need to capture client update times (u_updated_by_client)
+	// gr.addQuery('sys_updated_on','<',gs.daysAgo(10));
+	gr.query();
+	
+	while(gr.next()){
+		
+		setDetectClosureFields(gr,fiveDays);
+		
+	}
+	
+	// reset the gr variable to an empty GlideRecord
+	gr=new GlideRecord('u_mssp_incident');
+	
+	// Query Medium, Low, & Informational priority, In Progress -  Client tickets and close
+	gr.addQuery('state','10'); // In Progress - Client
+	gr.addQuery('priority','<','2'); // 2 - high
+	
+	// we need to capture client update times (u_updated_by_client)
+	// gr.addQuery('sys_updated_on','<',gs.daysAgo(5));
+	gr.query();
+	
+	while(gr.next()){
+		
+		setDetectClosureFields(gr,tenDays);
+		
+	}
+	
+	function addSchedule(durationCalculator) {
+		
+		//   Load the "8-5 weekdays excluding holidays" schedule into our duration calculator.
+		var scheduleName = "8-5 weekdays excluding holidays";
+		var grSched = new GlideRecord('cmn_schedule');
+		
+		grSched.addQuery('name', scheduleName);
+		grSched.query();
+		
+		if (!grSched.next()) {
+			
+			gs.error("*** Could not find schedule {0}.", scheduleName);
+				return;
+				
+			}
+			
+			// timezone appears to be optional: https://developer.servicenow.com/app.do#!/api_doc?v=kingston&id=r_DC-setSchedule_S_S
+			// return durationCalculator.setSchedule(grSched.getUniqueValue(), "GMT");
+			return durationCalculator.setSchedule(grSched.getUniqueValue());
+			
+	 }
+
+	 function setDetectClosureFields(gr,relativeDuration){
+			
+			// Initialize a duration calculator
+			var dc = new DurationCalculator();
+			addSchedule(dc); // funtion at bottom
+			
+			// set the start time equal to the current incident updated time
+			// will need to be modified for the client update time
+			dc.setStartDateTime(gr.sys_updated_on);
+			
+			//Calculate and see if resolve date is more than 5 business days ago (relDur). If so, close the ticket.
+			if (!dc.calcRelativeDuration(relativeDuration)) gs.error("*** calcRelativeDuration failed for record {0}", gr.number);
+				
+				if (dc.getEndDateTime() < gs.nowDateTime()){
+					
+					gr.status='4'; // Closed Incomplete
+			        gr.active=false;
+			        gr.comments='Incident automatically closed after 5 days without updates.';
+			        gr.close_notes='Incident automatically closed after 5 days without updates.';
+			        gr.update();
+					
+                }
+      }
+}		
