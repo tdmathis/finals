@@ -1,0 +1,122 @@
+170824 ServiceNow PopUp
+- combined elements from https://community.servicenow.com/thread/157592 & https://www.servicenowguru.com/system-ui/glidedialogwindow-terms-conditions-acceptance-page/
+- successfully troubleshooted the issue where the pop-up only saved "run once" preference for admins
+
+Client Script
+
+Name: Load Announcement
+Table: MSSP Incident
+Type: onLoad
+
+// code placeholder
+function onLoad() { 
+ 
+ var user_id = window.g_user.userID; 
+ var pref = new GlideRecord('sys_user_preference'); 
+ 
+ pref.addQuery('user', 'user_id'); 
+ pref.addQuery('name','splash_viewed'); 
+ pref.query(); 
+ if (pref.next()) { 
+  return; 
+ } 
+ 
+ //Initialize, render and open the Dialog Window containing the UI Page 'vsoc_announcement'
+ var dialog = new GlideDialogWindow('vsoc_announcement'); 
+ dialog.setTitle('GuidePoint Security vSOC'); 
+ dialog.setPreference('user_sys_id',user_id + '' || '');
+ dialog.setSize(600,600); //Set the dialog size
+ dialog.removeCloseDecoration(); //Remove the dialog close icon
+ dialog.setPreference('cancel_url', 'catalog_home.do?sysparm_view=catalog_default'); //Set optional cancel redirect URL
+ dialog.render(); //Open the dialog
+
+}
+
+
+UI Page 
+
+Name: vsoc_announcement
+
+// HTML 
+<g:ui_form>
+ <!-- Get values from dialog preferences passed in -->
+ <g:evaluate var="jvar_cancel_url" expression= "RP.getWindowProperties().get('cancel_url')" />
+ <g:evaluate var="jvar_user_sys_id" expression="RP.getWindowProperties().get('user_sys_id')" /> 
+ <input type="hidden" id="cancel_url" value="${jvar_cancel_url}" />
+ <g:ui_table>
+ <tr class="header"> 
+ <td class="column_head">
+ <div style="margin: 10px;" >
+ <h3> vSOC Detect Service-Now has been updated! </h3> 
+ </div> 
+ </td> 
+ </tr>
+ <tr>
+ <td>
+ <div style="width:584px; height:400px; overflow:auto; border: 1px solid gray;">
+ <div style="margin: 10px;" >
+ <p>This is a paragraph of text about your new release.</p>   
+ </div>
+ </div>
+ </td>
+ </tr>
+ <tr>
+ <td>
+ <div style="margin-top: 10px;">
+ <!-- Pull in 'ui_checkbox' UI Macro for accept checkbox -->
+ <g:ui_checkbox id="accept_terms" name="accept_terms" value="false"/>
+ <label for="load_demo">I acknowledge the update</label> 
+ </div>
+ </td>
+ </tr>
+ <tr>
+ <td colspan="2">
+ </td>
+ </tr>
+ <tr id="dialog_buttons">
+ 
+ <td colspan="2" align="right">
+ <div align="center"> 
+ <!-- Pull in 'dialog_buttons_ok_cancel' UI Macro for submit/cancel buttons -->
+ <g:dialog_buttons_ok_cancel ok="return termsOK()" cancel="termsCancel()" ok_type="button" cancel_type="button"/> 
+ <input id="user_sys_id" type="hidden" value="${jvar_user_sys_id}"></input> 
+ </div> 
+ </td>
+ </tr>
+ </g:ui_table>
+</g:ui_form>
+
+
+// Client Script gets called if the 'OK' dialog button is clicked
+function termsOK() { 
+ 
+ // Make sure terms have been accepted 
+ var terms = gel('accept_terms').value;
+ if(terms != 'true'){
+ 
+ // If terms are false stop submission
+ alert('Please acknowledge the ServiceNow update to continue.'); 
+ return false;
+ }
+ 
+ var user_id = document.getElementById("user_sys_id").value; 
+ var pref = new GlideRecord('sys_user_preference'); 
+ pref.initialize();
+ setPreference('splash_viewed', 'true');
+ pref.insert();
+ 
+ GlideDialogWindow.get().destroy(); 
+ return true; 
+} 
+ 
+function termsCancel(){
+ //Redirect gets called if the 'Cancel' dialog button is clicked
+ if($('cancel_url').value != 'null'){
+ window.location = $('cancel_url').value;
+ }
+ else{
+ window.location = 'home.do'; //Redirect to default homepage
+ }
+}
+
+
